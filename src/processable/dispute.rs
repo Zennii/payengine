@@ -20,8 +20,7 @@ impl Processable for Dispute {
         }
 
         let amount = in_question
-            .transaction
-            .get_amount()
+            .amount
             .ok_or("[dispute] Original transaction did not specify amount")?;
 
         in_question.disputed = true;

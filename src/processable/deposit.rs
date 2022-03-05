@@ -1,5 +1,5 @@
 use super::{into_processable, Processable};
-use crate::{Account, Transaction, TransactionLog, TransactionStatus};
+use crate::{Account, LoggedTransaction, Transaction, TransactionLog};
 use std::error::Error;
 
 pub struct Deposit;
@@ -16,7 +16,7 @@ impl Processable for Deposit {
         account.available += transaction
             .get_amount()
             .ok_or("[deposit] Transaction did not specify amount")?;
-        log.insert(transaction.tx, TransactionStatus::new(transaction));
+        log.insert(transaction.tx, LoggedTransaction::from(transaction));
         Ok(())
     }
 }

@@ -1,5 +1,5 @@
 use super::{into_processable, Processable};
-use crate::{Account, Transaction, TransactionLog, TransactionStatus};
+use crate::{Account, LoggedTransaction, Transaction, TransactionLog};
 use std::error::Error;
 
 pub struct Withdrawal;
@@ -24,7 +24,7 @@ impl Processable for Withdrawal {
 
         account.available -= amount;
 
-        log.insert(transaction.tx, TransactionStatus::new(transaction));
+        log.insert(transaction.tx, LoggedTransaction::from(transaction));
         Ok(())
     }
 }

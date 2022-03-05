@@ -3,16 +3,6 @@ use crate::{Account, TransactionLog};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum TransactionType {
-    Deposit,
-    Withdrawal,
-    Dispute,
-    Resolve,
-    Chargeback,
-}
-
 /// Clamps precision of an f32 to 4 decimal places.
 fn clamp_precision(f: f32) -> f32 {
     (f * 10000.0).floor() * (1.0 / 10000.0)
@@ -21,7 +11,7 @@ fn clamp_precision(f: f32) -> f32 {
 /// A transaction contains a type, client, tx ID, and amount which could possibly not exist.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
-    pub r#type: TransactionType,
+    pub r#type: String,
     pub client: u16,
     pub tx: u32,
     // Handle missing field
@@ -37,19 +27,14 @@ impl Transaction {
         account: &mut Account,
         log: &mut TransactionLog,
     ) -> Result<(), Box<dyn Error>> {
-        macro_rules! match_processable {
-            ($($ident:ident),*) => {
-                match self.r#type {
-                    $(
-                        TransactionType::$ident => $ident.into(),
-                    )*
-                }
-            }
-        }
-
-        let processable: Box<dyn Processable> = match_processable!(
-            Deposit, Withdrawal, Dispute, Resolve, Chargeback
-        );
+        let processable: Box<dyn Processable> = match self.r#type.to_lowercase().as_str() {
+            "deposit" => Deposit.into(),
+            "withdrawal" => Withdrawal.into(),
+            "dispute" => Dispute.into(),
+            "resolve" => Resolve.into(),
+            "chargeback" => Chargeback.into(),
+            _ => return Err("a".into()),
+        };
 
         processable.process(self, account, log)
     }
@@ -59,15 +44,18 @@ impl Transaction {
     }
 }
 
-pub struct TransactionStatus {
-    pub transaction: Transaction,
+#[derive(Debug, Default)]
+pub struct LoggedTransaction {
+    pub client: u16,
+    pub amount: Option<f32>,
     pub disputed: bool,
 }
 
-impl TransactionStatus {
-    pub fn new(transaction: Transaction) -> Self {
+impl From<Transaction> for LoggedTransaction {
+    fn from(transaction: Transaction) -> Self {
         Self {
-            transaction,
+            client: transaction.client,
+            amount: transaction.get_amount(),
             disputed: false,
         }
     }

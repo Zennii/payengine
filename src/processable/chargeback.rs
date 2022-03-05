@@ -20,8 +20,7 @@ impl Processable for Chargeback {
         }
 
         let amount = in_question
-            .transaction
-            .get_amount()
+            .amount
             .ok_or("[chargeback] Original transaction did not specify amount")?;
 
         account.locked = true;

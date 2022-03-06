@@ -1,27 +1,44 @@
 use super::{into_processable, Processable};
-use crate::{Account, Transaction, TransactionLog};
-use std::error::Error;
+use crate::account::{Account, Accounts};
+use crate::transaction::{Transaction, TransactionLog};
+use anyhow::{Context, Error, Result};
 
 pub struct Resolve;
 impl Processable for Resolve {
     fn process(
         &self,
         transaction: Transaction,
-        account: &mut Account,
+        accounts: &mut Accounts,
         log: &mut TransactionLog,
-    ) -> Result<(), Box<dyn Error>> {
-        let in_question = log
-            .get_mut(&transaction.tx)
-            .ok_or("[resolve] Invalid transaction reference")?;
+    ) -> Result<()> {
+        let in_question = log.get_mut(&transaction.tx).context(format!(
+            "[resolve] Invalid transaction reference {}",
+            transaction.tx
+        ))?;
+
+        if in_question.client != transaction.client {
+            return Err(Error::msg(format!(
+                "[resolve] Client value {} did not match reference client {} for transaction {}",
+                transaction.client, in_question.client, transaction.tx
+            )));
+        }
 
         if !in_question.disputed {
             // We're already disputing this
-            return Err("[resolve] Transaction not disputed".into());
+            return Err(Error::msg(format!(
+                "[resolve] Transaction {} not disputed",
+                transaction.tx
+            )));
         }
 
-        let amount = in_question
-            .amount
-            .ok_or("[resolve] Original transaction did not specify amount")?;
+        let amount = in_question.amount.context(format!(
+            "[resolve] Transaction {} did not specify amount",
+            transaction.tx
+        ))?;
+
+        let account = accounts
+            .entry(transaction.client)
+            .or_insert_with(|| Account::new(transaction.client));
 
         in_question.disputed = false;
         account.available += amount;

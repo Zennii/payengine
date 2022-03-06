@@ -1,7 +1,10 @@
+use crate::account::Accounts;
 use crate::processable::*;
-use crate::{Account, TransactionLog};
+use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
+use std::collections::HashMap;
+
+pub type TransactionLog = HashMap<u32, LoggedTransaction>;
 
 /// Clamps precision of an f32 to 4 decimal places.
 fn clamp_precision(f: f32) -> f32 {
@@ -22,18 +25,19 @@ pub struct Transaction {
 impl Transaction {
     /// Consumes itself to attempt to handle the transaction, returning an Err() if the transaction
     /// failed to process for some reason.
-    pub fn handle(
-        self,
-        account: &mut Account,
-        log: &mut TransactionLog,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn handle(self, account: &mut Accounts, log: &mut TransactionLog) -> Result<()> {
         let processable: Box<dyn Processable> = match self.r#type.to_lowercase().as_str() {
             "deposit" => Deposit.into(),
             "withdrawal" => Withdrawal.into(),
             "dispute" => Dispute.into(),
             "resolve" => Resolve.into(),
             "chargeback" => Chargeback.into(),
-            _ => return Err("a".into()),
+            s => {
+                return Err(Error::msg(format!(
+                    "Transaction type '{}' not implemented: transaction {}",
+                    s, self.tx
+                )))
+            }
         };
 
         processable.process(self, account, log)

@@ -10,16 +10,18 @@ pub use dispute::Dispute;
 pub use resolve::Resolve;
 pub use withdrawal::Withdrawal;
 
-use super::{Account, Transaction, TransactionLog};
-use std::error::Error;
+use crate::account::Accounts;
+use crate::transaction::{Transaction, TransactionLog};
+
+use anyhow::Result;
 
 pub trait Processable {
     fn process(
         &self,
         transaction: Transaction,
-        account: &mut Account,
+        accounts: &mut Accounts,
         log: &mut TransactionLog,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<()>;
 }
 
 macro_rules! into_processable {

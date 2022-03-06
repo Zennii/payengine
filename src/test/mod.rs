@@ -1,4 +1,4 @@
-use crate::Worker;
+use crate::Bank;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -12,18 +12,18 @@ macro_rules! test_file {
     };
 }
 
-fn process_worker(test_csv: &'static str) -> Worker {
-    let mut worker = Worker::new();
-    assert!(!worker.process_transactions(test_file!(test_csv)).is_err());
-    worker
+fn process(test_csv: &'static str) -> Bank {
+    let mut bank = Bank::new();
+    assert!(!bank.process_transactions(test_file!(test_csv)).is_err());
+    bank
 }
 
 #[test]
 fn chargeback() {
-    let worker = process_worker("chargeback.csv");
+    let bank = process("chargeback.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_ne!(account.available, 0.0);
     assert_eq!(account.held, 0.0);
@@ -33,10 +33,10 @@ fn chargeback() {
 
 #[test]
 fn chargeback_dispute() {
-    let worker = process_worker("chargeback_dispute.csv");
+    let bank = process("chargeback_dispute.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 0.0);
     assert_eq!(account.held, 0.0);
@@ -46,10 +46,10 @@ fn chargeback_dispute() {
 
 #[test]
 fn chargeback_no_tx() {
-    let worker = process_worker("chargeback_no_tx.csv");
+    let bank = process("chargeback_no_tx.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 0.0);
     assert_eq!(account.held, 1.0);
@@ -59,32 +59,32 @@ fn chargeback_no_tx() {
 
 #[test]
 fn decimals() {
-    let worker = process_worker("decimals.csv");
+    let bank = process("decimals.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx_1 = worker.transaction_log.get(&1).unwrap();
-    let tx_2 = worker.transaction_log.get(&2).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx_1 = bank.get_logged_transaction(1).unwrap();
+    let tx_2 = bank.get_logged_transaction(2).unwrap();
 
-    assert_eq!(account.available, 0.5555);
+    assert!(account.available - 0.5575 < f32::EPSILON);
     assert_eq!(tx_1.amount, Some(0.5555));
-    assert_eq!(tx_2.amount, Some(0.0));
+    assert_eq!(tx_2.amount, Some(0.002));
 }
 
 #[test]
 fn deposit() {
-    let worker = process_worker("deposit.csv");
+    let bank = process("deposit.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
 
     assert_eq!(account.available, 3.2345);
 }
 
 #[test]
 fn dispute() {
-    let worker = process_worker("dispute.csv");
+    let bank = process("dispute.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 0.0);
     assert_eq!(account.held, 1.0);
@@ -93,10 +93,10 @@ fn dispute() {
 
 #[test]
 fn dispute_no_tx() {
-    let worker = process_worker("dispute_no_tx.csv");
+    let bank = process("dispute_no_tx.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 1.0);
     assert_eq!(account.held, 0.0);
@@ -105,11 +105,11 @@ fn dispute_no_tx() {
 
 #[test]
 fn duplicate_tx() {
-    let worker = process_worker("duplicate_tx.csv");
+    let bank = process("duplicate_tx.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx_1 = worker.transaction_log.get(&1).unwrap();
-    let tx_2 = worker.transaction_log.get(&2).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx_1 = bank.get_logged_transaction(1).unwrap();
+    let tx_2 = bank.get_logged_transaction(2).unwrap();
 
     assert_eq!(account.available, 1.5);
     assert_eq!(tx_1.amount, Some(2.0));
@@ -118,18 +118,18 @@ fn duplicate_tx() {
 
 #[test]
 fn failed_parse() {
-    let worker = process_worker("failed_parse.csv");
+    let bank = process("failed_parse.csv");
 
-    assert_eq!(worker.accounts.len(), 0);
-    assert_eq!(worker.transaction_log.len(), 0);
+    assert_eq!(bank.num_accounts(), 0);
+    assert_eq!(bank.num_logs(), 0);
 }
 
 #[test]
 fn misordered_client() {
-    let worker = process_worker("misordered_client.csv");
+    let bank = process("misordered_client.csv");
 
-    let account_1 = worker.accounts.get(&1).unwrap();
-    let account_2 = worker.accounts.get(&2).unwrap();
+    let account_1 = bank.get_account(1).unwrap();
+    let account_2 = bank.get_account(2).unwrap();
 
     assert_eq!(account_1.available, 3.0);
     assert_eq!(account_2.available, 2.0);
@@ -137,10 +137,10 @@ fn misordered_client() {
 
 #[test]
 fn misordered_tx() {
-    let worker = process_worker("misordered_tx.csv");
+    let bank = process("misordered_tx.csv");
 
-    let account_1 = worker.accounts.get(&1).unwrap();
-    let account_2 = worker.accounts.get(&2).unwrap();
+    let account_1 = bank.get_account(1).unwrap();
+    let account_2 = bank.get_account(2).unwrap();
 
     assert_eq!(account_1.available, 2.0);
     assert_eq!(account_2.available, 3.0);
@@ -170,7 +170,7 @@ fn optional_amount() {
             Err(_) => panic!(),
         };
 
-        assert!(transaction.get_amount().is_none());
+        assert!(transaction.amount.is_none());
         count += 1;
     }
     assert_eq!(count, 2);
@@ -178,10 +178,10 @@ fn optional_amount() {
 
 #[test]
 fn resolve() {
-    let worker = process_worker("resolve.csv");
+    let bank = process("resolve.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 2.0);
     assert_eq!(account.held, 0.0);
@@ -190,10 +190,10 @@ fn resolve() {
 
 #[test]
 fn resolve_no_tx() {
-    let worker = process_worker("resolve_no_tx.csv");
+    let bank = process("resolve_no_tx.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 0.0);
     assert_eq!(account.held, 2.0);
@@ -202,10 +202,10 @@ fn resolve_no_tx() {
 
 #[test]
 fn resolved_dispute() {
-    let worker = process_worker("resolved_dispute.csv");
+    let bank = process("resolved_dispute.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
-    let tx = worker.transaction_log.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(1).unwrap();
 
     assert_eq!(account.available, 2.0);
     assert_eq!(account.held, 0.0);
@@ -214,10 +214,10 @@ fn resolved_dispute() {
 
 #[test]
 fn sample() {
-    let worker = process_worker("sample.csv");
+    let bank = process("sample.csv");
 
-    let account_1 = worker.accounts.get(&1).unwrap();
-    let account_2 = worker.accounts.get(&2).unwrap();
+    let account_1 = bank.get_account(1).unwrap();
+    let account_2 = bank.get_account(2).unwrap();
 
     assert_eq!(account_1.available, 1.5);
     assert_eq!(account_1.held, 0.0);
@@ -225,14 +225,14 @@ fn sample() {
     assert_eq!(account_2.available, 2.0);
     assert_eq!(account_2.held, 0.0);
     assert!(!account_2.locked);
-    assert_eq!(worker.transaction_log.len(), 4)
+    assert_eq!(bank.num_logs(), 4)
 }
 
 #[test]
 fn withdrawal() {
-    let worker = process_worker("withdrawal.csv");
+    let bank = process("withdrawal.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
 
     assert!(account.available - 0.4322 < f32::EPSILON);
     assert_eq!(account.held, 0.0);
@@ -240,9 +240,9 @@ fn withdrawal() {
 
 #[test]
 fn withdrawal_insufficient() {
-    let worker = process_worker("withdrawal_insufficient.csv");
+    let bank = process("withdrawal_insufficient.csv");
 
-    let account = worker.accounts.get(&1).unwrap();
+    let account = bank.get_account(1).unwrap();
 
     assert_eq!(account.available, 1.0);
     assert_eq!(account.held, 0.0);

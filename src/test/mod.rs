@@ -247,3 +247,22 @@ fn withdrawal_insufficient() {
     assert_eq!(account.available, 1.0);
     assert_eq!(account.held, 0.0);
 }
+
+#[test]
+fn total() {
+    let bank = process("total.csv");
+
+    let account = bank.get_account(1).unwrap();
+
+    assert!(account.get_total() - 2.6666 < f32::EPSILON);
+}
+
+#[test]
+fn locked() {
+    let bank = process("locked.csv");
+
+    let account = bank.get_account(1).unwrap();
+
+    assert!(account.locked);
+    assert_eq!(account.available, 0.0);
+}

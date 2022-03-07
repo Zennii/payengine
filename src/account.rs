@@ -1,7 +1,7 @@
 use anyhow::{Error, Result};
 use std::fmt::{Display, Formatter};
 
-const LOCKED_ERROR: &'static str = "Account is locked";
+const LOCKED_ERROR: &str = "Account is locked";
 
 /// An account holds funds and is represented by a
 /// unique ID. Funds can be available, which means

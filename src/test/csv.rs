@@ -126,11 +126,9 @@ fn duplicate_tx() {
 
     let account = bank.get_account(1).unwrap();
     let tx_1 = bank.get_logged_transaction(1).unwrap();
-    let tx_2 = bank.get_logged_transaction(2).unwrap();
 
-    assert_eq!(account.available, 1.5);
+    assert_eq!(account.available, 2.0);
     assert_eq!(tx_1.amount, 2.0);
-    assert_eq!(tx_2.amount, 0.5);
 }
 
 /// Lines that fail to parse should do nothing
@@ -267,7 +265,7 @@ fn sample() {
     assert_eq!(account_2.available, 2.0);
     assert_eq!(account_2.held, 0.0);
     assert!(!account_2.locked);
-    assert_eq!(bank.num_logs(), 4)
+    assert_eq!(bank.num_logs(), 3)
 }
 
 /// A withdrawal that succeeds

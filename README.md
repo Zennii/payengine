@@ -62,6 +62,7 @@ deposit, 1, 1, 1.0
 ```
 
 # Assumptions
+- Headers are required on CSV files.
 - A locked account can only deposit funds, similar to frozen accounts in real scenarios.
 - More than 4 decimals are never going to be fed in, and don't need to be capped off
 at entry.

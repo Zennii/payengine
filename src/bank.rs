@@ -240,22 +240,13 @@ impl Bank {
 
     /// Attempts to perform a withdrawal from a related account.
     ///
-    /// Returns an Err if the transaction exists already,
-    /// an amount is not specified, the account does not
-    /// have sufficient funds, or the account is locked.
+    /// Returns an Err if an amount is not specified, the account
+    /// does not have sufficient funds, or the account is locked.
     ///
     /// This function does not validate transaction type and
     /// assumes all transactions passed to it are to be treated
     /// as withdrawals.
     fn withdrawal(&mut self, transaction: Transaction) -> Result<()> {
-        // If the transaction already exists, return.
-        if self.deposit_log.contains_key(&transaction.tx) {
-            return Err(Error::msg(format!(
-                "[withdrawal] Transaction {} already exists",
-                transaction.tx
-            )));
-        }
-
         // Return early if an amount isn't specified on the transaction.
         let amount = transaction.amount.context(format!(
             "[withdrawal] Transaction {} did not specify amount",

@@ -20,6 +20,12 @@ fn process(test_csv: &'static str) -> Bank {
     bank
 }
 
+/// Test regular processing
+#[test]
+fn processing() {
+    process("processing.csv");
+}
+
 /// A chargeback attempted with no dispute
 #[test]
 fn chargeback() {

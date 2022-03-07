@@ -190,7 +190,7 @@ impl Bank {
     /// transaction reference) or if the type is not implemented.
     fn handle_transaction(&mut self, transaction: Transaction) -> Result<()> {
         // Handle all capitalizations of the type.
-        match transaction.r#type.to_lowercase().as_str() {
+        match transaction.get_type().as_str() {
             "deposit" => self.deposit(transaction),
             "withdrawal" => self.withdrawal(transaction),
             "dispute" => self.dispute(transaction),
@@ -290,8 +290,7 @@ impl Bank {
         // Check referenced transaction for sanity and grab the amount.
         let amount = self
             .validate_transaction_reference(&transaction, true)
-            .context("[dispute] Bad reference")?
-            .amount;
+            .context("[dispute] Bad reference")?.amount;
 
         // Get the account for manipulation.
         let account = self.get_or_create_account(transaction.client);
@@ -302,7 +301,8 @@ impl Bank {
             .context(format!("[dispute] Transaction {} failed", transaction.tx))?;
 
         // Mark the transaction for dispute.
-        self.set_disputed(transaction.tx, true).context("[dispute] Can't set dispute")?;
+        self.set_disputed(transaction.tx, true)
+            .context("[dispute] Can't set dispute")?;
         Ok(())
     }
 
@@ -329,7 +329,8 @@ impl Bank {
             .context(format!("[resolve] Transaction {} failed", transaction.tx))?;
 
         // The transaction is no longer disputed.
-        self.set_disputed(transaction.tx, false).context("[resolve] Can't set dispute")?;
+        self.set_disputed(transaction.tx, false)
+            .context("[resolve] Can't set dispute")?;
         Ok(())
     }
 

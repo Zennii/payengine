@@ -2,9 +2,9 @@
 
 This project processes sets of transactions represented by CSV files.
 
-I spent time digging around and covering as many cases as I could, such as CSV still
-being "valid" in various ways. This requires the occasional check in the code
-to validate as opposed to being fed a valid value after deserialization.
+I spent time digging around and covering as many cases as possible even if unnecessary,
+such as CSV still being "valid" in various ways. This requires the occasional check in
+the code to validate as opposed to being fed a valid value after deserialization.
 
 Async was considered although transactions would race and otherwise minimal apparent
 gain was present.
@@ -12,20 +12,24 @@ gain was present.
 Memory usage is not exceptional due to the dispute functionality storing a log in memory,
 but some optimization is there. This kind of thing seems like a valid usecase for a
 database or key-value store (embedded for a toy project like this) but disk is slow and
-it's unclear if supplied disk space is large enough either. Speed measured at around
-14 microseconds per transaction in debug mode and around 1 microsecond in release
-in my benchmarking using an average over a 167MB file.
+current popular embedded solutions for rust don't seem appropriate. For some examples,
+PickleDB seems to take up a lot more memory, and SQLite requires a dependency which the
+handling of that is unclear for this example.
 
-A series of 23 tests exist in CSV form to make sure possible usages pass. This tests all
-standard usage as well as irregular usages and various usecases unique based on assumptions
+Speed measured at around 14 microseconds per transaction in debug mode and around 1
+microsecond in release in my benchmarking using an average over a 167MB file.
+
+A series of 23 tests exist in CSV form to make sure possible usages pass. These test all
+standard usage as well as irregular usages and various usecases unique to the assumptions
 made. These are available in `src/test/` with a CSV file included for each test, so tests
-run through the whole system.
+run through the whole system from deserialization to results.
 
 6 tests exist for the Account functions. These are already somewhat narrated by the CSV
 tests, but more narrow in scope here.
 
 # Transaction types
-5 transaction types exist currently.
+5 transaction types exist currently. For amounts, going more than 4 places past the
+decimal is not handled and may result in unexpected behaviour.
 ## deposit
 Requires client ID (u16), tx ID (u32), amount (f32)
 ```

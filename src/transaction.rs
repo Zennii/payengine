@@ -21,12 +21,19 @@ use serde::{Deserialize, Serialize};
 /// not have an amount, or a dispute does have one.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
-    pub r#type: String,
+    r#type: String,
     pub client: u16,
     pub tx: u32,
     // Handle missing field
     #[serde(default)]
     pub amount: Option<f32>,
+}
+
+impl Transaction {
+    /// Returns the type as a lowercase string.
+    pub fn get_type(&self) -> String {
+        self.r#type.to_lowercase()
+    }
 }
 
 /// A LoggedTransaction is essentially a stripped
@@ -38,7 +45,7 @@ pub struct Transaction {
 /// Note that this type is lossy and can't be
 /// transformed back into a Transaction without
 /// recovering the lost data from elsewhere.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct LoggedTransaction {
     pub client: u16,
     pub amount: f32,

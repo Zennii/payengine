@@ -46,19 +46,19 @@ withdrawal, 1, 1, 1.0
 ## dispute
 Requires client ID (u16), tx ID (u32) to existing deposit
 ```
-deposit, 1, 1, 1.0
+dispute, 1, 1
 ```
 
 ## resolve
 Requires client ID (u16), tx ID (u32) to existing deposit
 ```
-deposit, 1, 1, 1.0
+resolve, 1, 1
 ```
 
 # chargeback
 Requires client ID (u16), tx ID (u32) to existing deposit
 ```
-deposit, 1, 1, 1.0
+chargeback, 1, 1
 ```
 
 # Assumptions

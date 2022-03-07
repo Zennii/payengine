@@ -1,3 +1,4 @@
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
 /// A transaction contains a type, client, tx ID, and
@@ -36,20 +37,26 @@ pub struct Transaction {
 ///
 /// Note that this type is lossy and can't be
 /// transformed back into a Transaction without
-/// recovering the tx from elsewhere.
+/// recovering the lost data from elsewhere.
 #[derive(Debug, Default)]
 pub struct LoggedTransaction {
     pub client: u16,
-    pub amount: Option<f32>,
+    pub amount: f32,
     pub disputed: bool,
 }
 
-impl From<Transaction> for LoggedTransaction {
-    fn from(transaction: Transaction) -> Self {
-        Self {
-            client: transaction.client,
-            amount: transaction.amount,
+impl TryFrom<Transaction> for LoggedTransaction {
+    type Error = anyhow::Error;
+
+    /// Converts a Transaction into a LoggedTransaction,
+    /// dropping unnecessary data for logging.
+    fn try_from(value: Transaction) -> Result<Self, Self::Error> {
+        Ok(Self {
+            client: value.client,
+            amount: value
+                .amount
+                .context(format!("Transaction {} has no amount", value.tx))?,
             disputed: false,
-        }
+        })
     }
 }

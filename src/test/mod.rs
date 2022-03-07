@@ -66,8 +66,8 @@ fn decimals() {
     let tx_2 = bank.get_logged_transaction(2).unwrap();
 
     assert!(account.available - 0.5575 < f32::EPSILON);
-    assert_eq!(tx_1.amount, Some(0.5555));
-    assert_eq!(tx_2.amount, Some(0.002));
+    assert_eq!(tx_1.amount, 0.5555);
+    assert_eq!(tx_2.amount, 0.002);
 }
 
 #[test]
@@ -112,8 +112,8 @@ fn duplicate_tx() {
     let tx_2 = bank.get_logged_transaction(2).unwrap();
 
     assert_eq!(account.available, 1.5);
-    assert_eq!(tx_1.amount, Some(2.0));
-    assert_eq!(tx_2.amount, Some(0.5));
+    assert_eq!(tx_1.amount, 2.0);
+    assert_eq!(tx_2.amount, 0.5);
 }
 
 #[test]
@@ -262,7 +262,10 @@ fn locked() {
     let bank = process("locked.csv");
 
     let account = bank.get_account(1).unwrap();
+    let tx = bank.get_logged_transaction(2).unwrap();
 
     assert!(account.locked);
-    assert_eq!(account.available, 0.0);
+    assert_eq!(account.available, 1.5);
+    assert_eq!(account.held, 0.0);
+    assert!(!tx.disputed);
 }

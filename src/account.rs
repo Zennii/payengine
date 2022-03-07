@@ -28,15 +28,8 @@ impl Account {
     }
 
     /// Attempt to deposit funds into the available funds.
-    ///
-    /// Returns an Err if the account is locked.
-    pub fn deposit(&mut self, amount: f32) -> Result<()> {
-        if self.locked {
-            return Err(Error::msg(LOCKED_ERROR));
-        }
-
+    pub fn deposit(&mut self, amount: f32) {
         self.available += amount;
-        Ok(())
     }
 
     /// Attempts to withdraw funds from the available funds.

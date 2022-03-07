@@ -308,7 +308,7 @@ fn total() {
 
     let account = bank.get_account(1).unwrap();
 
-    assert!(account.get_total() - 2.6666 < f32::EPSILON);
+    assert!(account.get_total() - (account.available + account.held) < f32::EPSILON);
 }
 
 /// A locked account attempting to be used

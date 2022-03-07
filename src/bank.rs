@@ -16,7 +16,7 @@ use std::path::Path;
 #[derive(Default)]
 pub struct Bank {
     accounts: HashMap<u16, Account>,
-    deposit_log: HashMap<u32, LoggedTransaction>,
+    transaction_log: HashMap<u32, LoggedTransaction>,
 }
 
 impl Display for Bank {
@@ -69,14 +69,14 @@ impl Bank {
     /// Returns the number of logged transactions.
     #[cfg(test)]
     pub fn num_logs(&self) -> usize {
-        self.deposit_log.len()
+        self.transaction_log.len()
     }
 
     /// Attempts to fetch a logged transaction by transaction ID, returning
     /// a reference to the LoggedTransaction if it exists.
     #[cfg(test)]
     pub fn get_logged_transaction(&self, tx: u32) -> Option<&LoggedTransaction> {
-        self.deposit_log.get(&tx)
+        self.transaction_log.get(&tx)
     }
 
     /// Sets a logged transaction to be disputed or not.
@@ -86,7 +86,7 @@ impl Bank {
         // Get the transaction referenced by this transaction, returning
         // early if that transaction does not exist.
         let in_question = self
-            .deposit_log
+            .transaction_log
             .get_mut(&tx)
             .context(format!("Invalid transaction reference {}", tx))?;
         in_question.disputed = disputed;
@@ -106,9 +106,16 @@ impl Bank {
         // Get the transaction referenced by this transaction, returning
         // early if that transaction does not exist.
         let in_question = self
-            .deposit_log
+            .transaction_log
             .get(&transaction.tx)
             .context(format!("Invalid transaction reference {}", transaction.tx))?;
+
+        if !in_question.deposit {
+            return Err(Error::msg(format!(
+                "Transaction {} is not deposit",
+                transaction.tx
+            )));
+        }
 
         if in_question.client != transaction.client {
             // The supplied client does not match the referenced client,
@@ -134,7 +141,7 @@ impl Bank {
     /// the log, keyed by its transaction ID.
     fn log_transaction(&mut self, transaction: Transaction) -> Result<()> {
         // Turn into a LoggedTransaction which strips off the transaction ID.
-        self.deposit_log
+        self.transaction_log
             .insert(transaction.tx, LoggedTransaction::try_from(transaction)?);
         Ok(())
     }
@@ -214,7 +221,7 @@ impl Bank {
     /// as deposits.
     fn deposit(&mut self, transaction: Transaction) -> Result<()> {
         // If the transaction already exists, return.
-        if self.deposit_log.contains_key(&transaction.tx) {
+        if self.transaction_log.contains_key(&transaction.tx) {
             return Err(Error::msg(format!(
                 "[deposit] Transaction {} already exists",
                 transaction.tx
@@ -247,6 +254,14 @@ impl Bank {
     /// assumes all transactions passed to it are to be treated
     /// as withdrawals.
     fn withdrawal(&mut self, transaction: Transaction) -> Result<()> {
+        // If the transaction already exists, return.
+        if self.transaction_log.contains_key(&transaction.tx) {
+            return Err(Error::msg(format!(
+                "[withdrawal] Transaction {} already exists",
+                transaction.tx
+            )));
+        }
+
         // Return early if an amount isn't specified on the transaction.
         let amount = transaction.amount.context(format!(
             "[withdrawal] Transaction {} did not specify amount",
@@ -263,6 +278,8 @@ impl Bank {
             transaction.tx
         ))?;
 
+        // Log for future reference. This shouldn't error if above amount didn't
+        self.log_transaction(transaction)?;
         Ok(())
     }
 

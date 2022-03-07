@@ -49,6 +49,7 @@ impl Transaction {
 pub struct LoggedTransaction {
     pub client: u16,
     pub amount: f32,
+    pub deposit: bool,
     pub disputed: bool,
 }
 
@@ -63,6 +64,7 @@ impl TryFrom<Transaction> for LoggedTransaction {
             amount: value
                 .amount
                 .context(format!("Transaction {} has no amount", value.tx))?,
+            deposit: value.get_type() == "deposit",
             disputed: false,
         })
     }

@@ -278,7 +278,8 @@ impl Bank {
         // Check referenced transaction for sanity and grab the amount.
         let amount = self
             .validate_transaction_reference(&transaction, true)
-            .context("[dispute] Bad reference")?.amount;
+            .context("[dispute] Bad reference")?
+            .amount;
 
         // Get the account for manipulation.
         let account = self.get_or_create_account(transaction.client);

@@ -146,7 +146,7 @@ impl Bank {
     /// This function returns an Err if the file fails to open.
     ///
     /// If a line fails to parse as a Transaction or fails to be handled,
-    /// the line is ignored.
+    /// the line is ignored and an error is printed on stderr.
     pub fn process_transactions<P: AsRef<Path>>(&mut self, transaction_path: P) -> Result<()> {
         // Read the file as csv, only requiring read permissions on the file.
         // The CSV is trimmed of any whitespaces and allows a variable number

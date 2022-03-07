@@ -92,3 +92,6 @@ so much to be done without resorting to storing the log elsewhere like on a data
 - A chargeback does not resolve a dispute.
 - Entries without amounts may or may not end with a trailing comma.
 - Only deposits can be disputed. Transaction specification strongly implies this.
+- Transactions that fail to deserialize or process print to stderr.
+- Transactions that fail to deserialize or process are skipped as if nothing happened.
+

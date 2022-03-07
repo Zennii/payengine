@@ -106,6 +106,17 @@ fn dispute() {
     assert!(tx.disputed);
 }
 
+/// A dispute on a withdrawal
+#[test]
+fn dispute_withdrawal() {
+    let bank = process("dispute_withdrawal.csv");
+
+    let account = bank.get_account(1).unwrap();
+
+    assert_eq!(account.available, 0.5);
+    assert_eq!(account.held, 0.0);
+}
+
 /// A dispute attempted with no transaction
 #[test]
 fn dispute_no_tx() {

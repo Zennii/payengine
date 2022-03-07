@@ -32,31 +32,37 @@ tests, but more narrow in scope here.
 5 transaction types exist currently. For amounts, going more than 4 places past the
 decimal is not handled and may result in unexpected behaviour.
 ## deposit
-Requires client ID (u16), tx ID (u32), amount (f32)
+Requires client ID (u16), tx ID (u32), amount (f32).
+Deposits funds, makes them available.
 ```
 deposit, 1, 1, 1.0
 ```
 
 ## withdrawal
-Requires client ID (u16), tx ID (u32), amount (f32)
+Requires client ID (u16), tx ID (u32), amount (f32).
+Withdraws funds if available.
 ```
 withdrawal, 1, 1, 1.0
 ```
 
 ## dispute
-Requires client ID (u16), tx ID (u32) to existing deposit
+Requires client ID (u16), tx ID (u32) to existing deposit.
+This will dispute a deposit and put the funds on hold.
 ```
 dispute, 1, 1
 ```
 
 ## resolve
-Requires client ID (u16), tx ID (u32) to existing deposit
+Requires client ID (u16), tx ID (u32) to existing deposit that has been disputed.
+This will resolve an existing dispute and make funds available again.
 ```
 resolve, 1, 1
 ```
 
 # chargeback
-Requires client ID (u16), tx ID (u32) to existing deposit
+Requires client ID (u16), tx ID (u32) to existing deposit that has been disputed.
+This will remove funds from an existing account, if enough are disputed. The account
+will be locked for future transactions.
 ```
 chargeback, 1, 1
 ```
